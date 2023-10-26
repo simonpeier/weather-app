@@ -1,0 +1,19 @@
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### MacOS ###
+.DS_Store
+
+# Gradle
+.gradle
+!/gradle/wrapper/gradle-wrapper.jar
+
+# Other
+/local.properties
+/build
+/captures
+.externalNativeBuild
+.cxx
