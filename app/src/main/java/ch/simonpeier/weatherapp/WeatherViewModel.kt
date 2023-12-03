@@ -1,7 +1,17 @@
 package ch.simonpeier.weatherapp
 
+import android.annotation.SuppressLint
+import android.app.Application
+import android.location.Location
+import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,9 +23,13 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 class WeatherViewModel(private val weatherService: WeatherService = WeatherService()) : ViewModel() {
-
     private val _uiState = MutableStateFlow(WeatherUiState())
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
+
+    private var fusedLocationClient: FusedLocationProviderClient? = null
+    private val _locationPermissionDenied = mutableStateOf(false)
+    val locationPermissionDenied: Boolean
+        get() = _locationPermissionDenied.value
 
     fun fetchData(latitude: Double, longitude: Double) {
         viewModelScope.launch {
@@ -24,7 +38,7 @@ class WeatherViewModel(private val weatherService: WeatherService = WeatherServi
                 val location = weather.name.split(Regex("/"), 2)
                 val calendar = Calendar.getInstance()
                 val dateOnly = SimpleDateFormat("dd.MM.yyyy", Locale.GERMAN)
-                val windDirection = (weather.wind.deg?.let { getWindDirection(it) } ?: "")
+                val windDirection = weather.wind.deg.let { getWindDirection(it) }
 
                 _uiState.update { currentState ->
                     currentState.copy(
@@ -39,9 +53,51 @@ class WeatherViewModel(private val weatherService: WeatherService = WeatherServi
                 }
 
             } catch (e: Exception) {
-                println(e.message)
+                Log.e("WeatherViewModel", e.message.toString())
             }
         }
+    }
+
+    fun onLocationPermissionGranted(application: Application) {
+        if (fusedLocationClient == null) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
+        }
+        requestCurrentLocation()
+    }
+
+    fun onLocationPermissionDenied() {
+        _locationPermissionDenied.value = true
+    }
+
+    @SuppressLint("MissingPermission")
+    fun requestCurrentLocation() {
+        fusedLocationClient?.lastLocation?.addOnSuccessListener { location: Location? ->
+            if (location != null) {
+                fetchData(location.latitude, location.longitude)
+            } else {
+                requestLocationUpdates()
+            }
+        }?.addOnFailureListener {
+            onLocationPermissionDenied()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun requestLocationUpdates() {
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                val lastLocation: Location = locationResult.lastLocation
+                // Do something with the location, update UI, etc. (fetchData)
+                fetchData(lastLocation.latitude, lastLocation.longitude)
+            }
+        }
+
+        val locationRequest = LocationRequest.create().apply {
+            interval = 1000
+            priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+        }
+
+        fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback, null)
     }
 
     private fun getWindDirection(degree: Int): String {

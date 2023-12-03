@@ -6,7 +6,7 @@ import retrofit2.http.Query
 
 interface OpenWeatherMapApi {
     @GET("weather")
-    suspend fun getCurrentWeather(
+    fun getCurrentWeather(
         @Query("lat") latidude: Double,
         @Query("lon") longitude: Double,
         @Query("appid") apiKey: String,
