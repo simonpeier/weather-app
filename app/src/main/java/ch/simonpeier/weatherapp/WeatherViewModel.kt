@@ -39,10 +39,12 @@ class WeatherViewModel(private val weatherService: WeatherService = WeatherServi
                 val calendar = Calendar.getInstance()
                 val dateOnly = SimpleDateFormat("dd.MM.yyyy", Locale.GERMAN)
                 val windDirection = weather.wind.deg.let { getWindDirection(it) }
+                val icon = getResourceId(weather.weather[0].icon)
 
                 _uiState.update { currentState ->
                     currentState.copy(
                         location = location[0],
+                        weatherIcon = icon,
                         date = dateOnly.format(calendar.time),
                         temperature = "${weather.main.temp.roundToInt()}°",
                         airPressure = "${weather.main.pressure} hPa",
@@ -59,6 +61,7 @@ class WeatherViewModel(private val weatherService: WeatherService = WeatherServi
     }
 
     fun onLocationPermissionGranted(application: Application) {
+        _locationPermissionDenied.value = false
         if (fusedLocationClient == null) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
         }
@@ -71,12 +74,8 @@ class WeatherViewModel(private val weatherService: WeatherService = WeatherServi
 
     @SuppressLint("MissingPermission")
     fun requestCurrentLocation() {
-        fusedLocationClient?.lastLocation?.addOnSuccessListener { location: Location? ->
-            if (location != null) {
-                fetchData(location.latitude, location.longitude)
-            } else {
-                requestLocationUpdates()
-            }
+        fusedLocationClient?.lastLocation?.addOnSuccessListener {
+            requestLocationUpdates()
         }?.addOnFailureListener {
             onLocationPermissionDenied()
         }
@@ -111,6 +110,30 @@ class WeatherViewModel(private val weatherService: WeatherService = WeatherServi
             degree > 67 -> "E"
             degree > 22.5 -> "NE"
             else -> "invalid"
+        }
+    }
+
+    private fun getResourceId(key: String): Int {
+        return when (key) {
+            "01d" -> R.drawable.icon_01d
+            "01n" -> R.drawable.icon_01n
+            "02d" -> R.drawable.icon_02d
+            "02n" -> R.drawable.icon_02n
+            "03d" -> R.drawable.icon_03d
+            "03n" -> R.drawable.icon_03n
+            "04d" -> R.drawable.icon_04d
+            "04n" -> R.drawable.icon_04n
+            "09d" -> R.drawable.icon_09d
+            "09n" -> R.drawable.icon_09n
+            "10d" -> R.drawable.icon_10d
+            "10n" -> R.drawable.icon_10n
+            "11d" -> R.drawable.icon_11d
+            "11n" -> R.drawable.icon_11n
+            "13d" -> R.drawable.icon_13d
+            "13n" -> R.drawable.icon_13n
+            "50d" -> R.drawable.icon_50d
+            "50n" -> R.drawable.icon_50n
+            else -> R.drawable.ic_launcher_foreground // Use a default image if the key is not found
         }
     }
 }

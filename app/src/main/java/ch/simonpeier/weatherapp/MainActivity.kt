@@ -7,6 +7,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -16,7 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +31,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -98,11 +102,23 @@ fun WeatherLayout(
             containerColor = MaterialTheme.colorScheme.background
         ) {
             Column(modifier = modifier.padding(mediumPad)) {
-                Text(
-                    text = weatherUiState.temperature,
-                    style = MaterialTheme.typography.displayLarge,
-                    modifier = Modifier.padding(bottom = mediumPad)
-                )
+                Row(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(bottom = mediumPad),
+                    horizontalArrangement = Arrangement.Start,
+                ) {
+                    Text(
+                        text = weatherUiState.temperature,
+                        style = MaterialTheme.typography.displayLarge,
+                    )
+                    Image(
+                        painter = painterResource(weatherUiState.weatherIcon),
+                        contentDescription = "weather icon",
+                        contentScale = ContentScale.Crop,
+                        modifier = modifier.size(76.dp)
+                    )
+                }
                 Text(
                     text = weatherUiState.location,
                     style = MaterialTheme.typography.displayMedium,
@@ -136,14 +152,14 @@ fun WeatherLayout(
         TextButton(
             onClick = { weatherViewModel.onLocationPermissionGranted(application) },
             shape = MaterialTheme.shapes.medium,
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .padding(mediumPad)
         ) {
             Text(
                 text = "Update location",
                 fontSize = 24.sp,
-                modifier = Modifier.padding(smallPad)
+                modifier = modifier.padding(smallPad)
             )
         }
     }
@@ -191,30 +207,28 @@ fun WeatherInfoColumn(
         Text(
             text = title,
             style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(start = mediumPad, end = mediumPad, top = mediumPad)
+            modifier = modifier.padding(start = mediumPad, end = mediumPad, top = mediumPad)
         )
         Row(modifier = modifier.padding(horizontal = mediumPad)) {
             Text(
                 text = firstDesc,
                 style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(end = 16.dp)
+                modifier = modifier.padding(end = 16.dp)
             )
             Text(
                 text = firstContent,
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier
+                style = MaterialTheme.typography.headlineSmall
             )
         }
         Row(modifier = modifier.padding(horizontal = mediumPad)) {
             Text(
                 text = secondDesc,
                 style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(end = 16.dp)
+                modifier = modifier.padding(end = 16.dp)
             )
             Text(
                 text = secondContent,
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier
+                style = MaterialTheme.typography.headlineSmall
             )
         }
     }
@@ -224,10 +238,14 @@ fun WeatherInfoColumn(
 fun LocationPermissionDeniedSnackbar() {
     Box(
         modifier = Modifier
-            .width(200.dp)
-            .height(50.dp)
+            .fillMaxSize()
     ) {
-        Snackbar(modifier = Modifier.padding(16.dp)) {
+        Snackbar(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .padding(24.dp)
+        ) {
             Text("Location permission is required for the app to function properly.")
         }
     }
