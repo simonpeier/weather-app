@@ -3,6 +3,7 @@ package ch.simonpeier.weatherapp
 import android.annotation.SuppressLint
 import android.app.Application
 import android.location.Location
+import android.os.Looper
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -65,7 +66,7 @@ class WeatherViewModel(private val weatherService: WeatherService = WeatherServi
         if (fusedLocationClient == null) {
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(application)
         }
-        requestCurrentLocation()
+        requestLocationUpdates()
     }
 
     fun onLocationPermissionDenied() {
@@ -73,20 +74,10 @@ class WeatherViewModel(private val weatherService: WeatherService = WeatherServi
     }
 
     @SuppressLint("MissingPermission")
-    fun requestCurrentLocation() {
-        fusedLocationClient?.lastLocation?.addOnSuccessListener {
-            requestLocationUpdates()
-        }?.addOnFailureListener {
-            onLocationPermissionDenied()
-        }
-    }
-
-    @SuppressLint("MissingPermission")
     private fun requestLocationUpdates() {
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 val lastLocation: Location = locationResult.lastLocation
-                // Do something with the location, update UI, etc. (fetchData)
                 fetchData(lastLocation.latitude, lastLocation.longitude)
             }
         }
@@ -96,7 +87,7 @@ class WeatherViewModel(private val weatherService: WeatherService = WeatherServi
             priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
         }
 
-        fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback, null)
+        fusedLocationClient?.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
     }
 
     private fun getWindDirection(degree: Int): String {

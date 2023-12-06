@@ -56,6 +56,6 @@ class WeatherService {
     companion object {
         private const val BASE_URL = "https://api.openweathermap.org/data/2.5/"
         private const val UNITS = "metric"
-        private const val API_KEY = "cd91eaa4c63ffe5597cec2da4f6c7efe"
+        private const val API_KEY = "bcff78d8bb0e19e0bacb0829e77acc85"
     }
 }
